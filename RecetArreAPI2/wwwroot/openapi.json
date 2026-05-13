@@ -1,0 +1,20 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "RecetArre API",
+    "version": "v1",
+    "description": "Especificación OpenAPI generada estáticamente para ReDoc local"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Raíz",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

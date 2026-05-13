@@ -1,0 +1,6 @@
+@RecetArreAPI2_HostAddress = http://localhost:5070
+
+GET {{RecetArreAPI2_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
