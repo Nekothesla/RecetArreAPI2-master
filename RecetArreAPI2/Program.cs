@@ -90,3 +90,18 @@ catch (Exception ex)
     }
     throw;
 }
+
+// 1. Agrega esto antes de builder.Build();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirVercel",
+        politica => politica
+            .WithOrigins("https://recet-arre-web-master.vercel.app") // Tu URL exacta de Vercel
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+
+var app = builder.Build();
+
+// 2. Agrega esto ANTES de app.UseAuthorization();
+app.UseCors("PermitirVercel");
