@@ -13,25 +13,27 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    // Add services to the container.
+    // Controladores
+    builder.Services.AddControllers()
+        .AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles)
+        .AddNewtonsoftJson();
 
-    builder.Services.AddControllers();
-    // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+    // OpenAPI
     builder.Services.AddOpenApi();
 
-    // Configurar AutoMapper
+    // AutoMapper
     builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(Program).Assembly));
 
-    //Configurar la seguridad de Identity (Microsoft)
+    // Identity
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
-    //Conexion a la base de datos
+    // Base de datos
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    //Configurar JWT
+    // JWT
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(opciones => opciones.TokenValidationParameters = new TokenValidationParameters
         {
@@ -40,29 +42,28 @@ try
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["LlaveJWT"]!)),
+                Encoding.UTF8.GetBytes(builder.Configuration["LlaveJWT"]!)),
             ClockSkew = TimeSpan.Zero
         });
 
-    //Ignorar Cyclos repetidos
-    builder.Services.AddControllers()
-        .AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles)
-        .AddNewtonsoftJson();
-
-    // Configurar CORS
+    // CORS
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("PermitirTodo", policy =>
+        options.AddPolicy("PermitirOrigenes", policy =>
         {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
+            policy.WithOrigins(
+                    "https://recet-arre-web-master.vercel.app",
+                    "http://localhost:5000",
+                    "https://localhost:5001"
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader();
         });
     });
 
     var app = builder.Build();
 
-    // Configure the HTTP request pipeline.
+    // Pipeline
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
@@ -71,7 +72,7 @@ try
 
     app.UseHttpsRedirection();
 
-    app.UseCors("PermitirTodo");
+    app.UseCors("PermitirOrigenes");
 
     app.UseAuthentication();
     app.UseAuthorization();
@@ -90,18 +91,3 @@ catch (Exception ex)
     }
     throw;
 }
-
-// 1. Agrega esto antes de builder.Build();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("PermitirVercel",
-        politica => politica
-            .WithOrigins("https://recet-arre-web-master.vercel.app") // Tu URL exacta de Vercel
-            .AllowAnyMethod()
-            .AllowAnyHeader());
-});
-
-var app = builder.Build();
-
-// 2. Agrega esto ANTES de app.UseAuthorization();
-app.UseCors("PermitirVercel");
