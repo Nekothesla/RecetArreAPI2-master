@@ -52,10 +52,10 @@ try
         options.AddPolicy("PermitirOrigenes", policy =>
         {
             policy.WithOrigins(
-                    "https://recet-arre-web-master.vercel.app",
-                    "http://localhost:5000",
-                    "https://localhost:5001"
-                )
+    "https://recet-arre-web-master.vercel.app",
+    "http://localhost:5000",
+    "https://localhost:5001"
+)
                 .AllowAnyMethod()
                 .AllowAnyHeader();
         });
