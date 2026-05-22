@@ -1,5 +1,6 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -52,25 +53,40 @@ try
         options.AddPolicy("PermitirOrigenes", policy =>
         {
             policy.WithOrigins(
-    "https://recet-arre-web-master.vercel.app",
-    "http://localhost:5000",
-    "https://localhost:5001"
-)
+                "https://recet-arre-web-master.vercel.app",
+                "http://localhost:5000",
+                "https://localhost:5001",
+                "http://localhost:5197",
+                "https://localhost:7097"
+            )
                 .AllowAnyMethod()
                 .AllowAnyHeader();
         });
     });
 
+    // Necesario para leer cabeceras de proxy (IIS / Somee)
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
     var app = builder.Build();
 
-    // Pipeline
+    // Debe ir primero para que el resto del pipeline vea el esquema real
+    app.UseForwardedHeaders();
+
+    // Solo en desarrollo
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
         app.MapScalarApiReference();
+        app.MapGet("/", () => Results.Redirect("/scalar/v1"));
     }
 
-    app.UseHttpsRedirection();
+    // No usar HTTPS redirect: Somee termina SSL en el proxy, el app recibe HTTP internamente
+    // app.UseHttpsRedirection();
 
     app.UseCors("PermitirOrigenes");
 
